@@ -32,6 +32,8 @@ class BleScanService : Service() {
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
+            Log.d(TAG, "Device found: ${device.address} - ${device.name}")
+            
             val intent = Intent(SCAN_RESULT_ACTION)
             intent.putExtra(DEVICE_NAME, device.name ?: "Desconhecido")
             intent.putExtra(DEVICE_ADDRESS, device.address)
@@ -64,10 +66,17 @@ class BleScanService : Service() {
 
         override fun onScanFailed(errorCode: Int) {
             Log.e(TAG, "Scan failed with error: $errorCode")
-            if (errorCode == SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
-                // Restart scan if registration failed
-                stopScan()
-                handler.postDelayed({ startScan() }, 1000)
+            when (errorCode) {
+                SCAN_FAILED_ALREADY_STARTED -> {
+                    isScanning = true
+                }
+                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> {
+                    isScanning = false
+                    handler.postDelayed({ startScan() }, 1000)
+                }
+                else -> {
+                    isScanning = false
+                }
             }
         }
     }
@@ -76,8 +85,7 @@ class BleScanService : Service() {
         override fun run() {
             if (isScanning) {
                 Log.d(TAG, "Restarting scan to avoid system timeout...")
-                stopScan()
-                handler.postDelayed({ startScan() }, 1000)
+                startScan() // startScan already calls stopScan internally now
             }
             handler.postDelayed(this, 5 * 60 * 1000) // Restart every 5 minutes
         }
@@ -85,6 +93,7 @@ class BleScanService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "Service onCreate")
         notificationHelper = NotificationHelper(this)
         
         // Call startForeground immediately in onCreate to avoid ForegroundServiceDidNotStartInTimeException
@@ -113,6 +122,7 @@ class BleScanService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "Service onStartCommand")
         startScan()
         handler.removeCallbacks(scanRestartRunnable)
         handler.postDelayed(scanRestartRunnable, 5 * 60 * 1000)
@@ -120,7 +130,10 @@ class BleScanService : Service() {
     }
 
     private fun startScan() {
-        if (isScanning) return
+        Log.d(TAG, "Attempting to start BLE Scan...")
+        
+        // Stop any existing scan before starting a new one to clean up state
+        stopScan()
         
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -133,13 +146,15 @@ class BleScanService : Service() {
         try {
             bluetoothLeScanner?.startScan(filters, settings, scanCallback)
             isScanning = true
-            Log.d(TAG, "BLE Scan started successfully")
+            Log.d(TAG, "BLE Scan started")
         } catch (e: Exception) {
             Log.e(TAG, "Error starting scan: ${e.message}")
+            isScanning = false
         }
     }
 
     private fun stopScan() {
+        Log.d(TAG, "Stopping BLE Scan...")
         try {
             bluetoothLeScanner?.stopScan(scanCallback)
         } catch (e: Exception) {
