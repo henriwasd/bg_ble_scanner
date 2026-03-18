@@ -19,6 +19,9 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Setup Dart (for OIDC authentication)
+        uses: dart-lang/setup-dart@v1
+
       - name: Install dependencies
         run: flutter pub get
 
