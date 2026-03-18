@@ -1,0 +1,24 @@
+name: Publish to Pub.dev
+
+on:
+  push:
+    tags:
+      - 'v*' # Roda quando você cria uma tag como v1.0.0, v1.0.1, etc.
+
+jobs:
+  publish:
+    permissions:
+      id-token: write # Obrigatório para autenticação via OIDC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force
