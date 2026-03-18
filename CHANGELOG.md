@@ -1,3 +1,8 @@
+## 1.0.1
+
+*   Fix GitHub Actions publish workflow.
+*   Minor improvements in Android scanning logic.
+
 ## 1.0.0
 
 *   Initial release with robust background scanning.
