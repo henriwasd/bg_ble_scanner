@@ -3,13 +3,13 @@ name: Publish to Pub.dev
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+**'
-  workflow_dispatch: # Permite disparar manualmente via aba Actions
+      - 'v[0-9]+.[0-9]+.[0-9]+*' # Gatilho apenas para tags como v1.0.0, v1.0.1, etc.
 
 jobs:
   publish:
     permissions:
-      id-token: write # Obrigatório para autenticação OIDC
+      id-token: write # Necessário para autenticação OIDC
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -20,7 +20,7 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Setup Dart (for OIDC authentication)
+      - name: Setup Dart
         uses: dart-lang/setup-dart@v1
 
       - name: Install dependencies
