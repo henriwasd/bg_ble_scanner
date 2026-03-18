@@ -1,4 +1,4 @@
-package com.example.bg_ble_scanner
+﻿package com.example.bg_ble_scanner
 
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
@@ -9,7 +9,9 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.ParcelUuid
 import android.util.Log
+import java.util.*
 
 class BleScanService : Service() {
 
@@ -22,118 +24,74 @@ class BleScanService : Service() {
         const val SERVICE_DATA = "service_data"
         const val RAW_DATA = "raw_data"
         private const val TAG = "BleScanService"
+        
+        private const val APPLE_MANUFACTURER_ID = 0x004C
+        private const val TELTONIKA_MANUFACTURER_ID = 0x089A
+        private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000feaa-0000-1000-8000-00805f9b34fb")
     }
 
     private var bluetoothLeScanner: BluetoothLeScanner? = null
     private lateinit var notificationHelper: NotificationHelper
-    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
     private var isScanning = false
+    private var currentServiceUuids: List<String> = emptyList()
 
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
-            Log.d(TAG, "Device found: ${device.address} - ${device.name}")
-            
-            val intent = Intent(SCAN_RESULT_ACTION)
-            intent.putExtra(DEVICE_NAME, device.name ?: "Desconhecido")
-            intent.putExtra(DEVICE_ADDRESS, device.address)
-            intent.putExtra(RSSI, result.rssi)
-            
-            // Extract Raw Scan Record Bytes
-            result.scanRecord?.bytes?.let { bytes ->
-                intent.putExtra(RAW_DATA, bytes)
-            }
-            
-            // Extract Manufacturer Data
-            result.scanRecord?.manufacturerSpecificData?.let { manufacturerData ->
-                if (manufacturerData.size() > 0) {
-                    val firstKey = manufacturerData.keyAt(0)
-                    val data = manufacturerData.get(firstKey)
-                    intent.putExtra(MANUFACTURER_DATA, data)
+            val deviceData = mutableMapOf<String, Any?>(
+                "name" to (device.name ?: "Unknown"),
+                "address" to device.address,
+                "rssi" to result.rssi
+            )
+
+            result.scanRecord?.bytes?.let { deviceData["rawData"] = it }
+
+            result.scanRecord?.manufacturerSpecificData?.let { data ->
+                if (data.size() > 0) {
+                    deviceData["manufacturerData"] = data.valueAt(0)
                 }
             }
-            
-            // Extract Service Data
+
             result.scanRecord?.serviceData?.let { serviceData ->
                 if (serviceData.isNotEmpty()) {
-                    val firstEntry = serviceData.entries.first()
-                    intent.putExtra(SERVICE_DATA, firstEntry.value)
+                    deviceData["serviceData"] = serviceData.values.first()
                 }
             }
-            
-            sendBroadcast(intent)
+
+            BgBleScannerPlugin.sendResult(deviceData)
         }
 
         override fun onScanFailed(errorCode: Int) {
-            Log.e(TAG, "Scan failed with error: $errorCode")
-            when (errorCode) {
-                SCAN_FAILED_ALREADY_STARTED -> {
-                    isScanning = true
-                }
-                SCAN_FAILED_APPLICATION_REGISTRATION_FAILED -> {
-                    isScanning = false
-                    handler.postDelayed({ startScan() }, 1000)
-                }
-                else -> {
-                    isScanning = false
-                }
-            }
-        }
-    }
-
-    private val scanRestartRunnable = object : Runnable {
-        override fun run() {
-            if (isScanning) {
-                Log.d(TAG, "Restarting scan to avoid system timeout...")
-                startScan() // startScan already calls stopScan internally now
-            }
-            handler.postDelayed(this, 5 * 60 * 1000) // Restart every 5 minutes
+            Log.e(TAG, "Scan failed: $errorCode")
+            isScanning = false
         }
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "Service onCreate")
         notificationHelper = NotificationHelper(this)
-        
-        // Call startForeground immediately in onCreate to avoid ForegroundServiceDidNotStartInTimeException
-        try {
+        startForeground(
+            NotificationHelper.NOTIFICATION_ID,
+            notificationHelper.getNotification(),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val foregroundServiceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE or 
-                                          ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-                startForeground(
-                    NotificationHelper.NOTIFICATION_ID,
-                    notificationHelper.getNotification(),
-                    foregroundServiceType
-                )
-            } else {
-                startForeground(NotificationHelper.NOTIFICATION_ID, notificationHelper.getNotification())
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start foreground: ${e.message}")
-        }
-
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+            } else 0
+        )
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothLeScanner = bluetoothManager.adapter?.bluetoothLeScanner
-        
-        if (bluetoothLeScanner == null) {
-            Log.e(TAG, "BluetoothLeScanner is null. Is Bluetooth enabled?")
-        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "Service onStartCommand")
+        val uuids = intent?.getStringArrayListExtra("serviceUuids")
+        if (uuids != null) {
+            currentServiceUuids = uuids
+        }
         startScan()
-        handler.removeCallbacks(scanRestartRunnable)
-        handler.postDelayed(scanRestartRunnable, 5 * 60 * 1000)
         return START_STICKY
     }
 
     private fun startScan() {
-        Log.d(TAG, "Attempting to start BLE Scan...")
-        
-        // Stop any existing scan before starting a new one to clean up state
-        stopScan()
+        if (isScanning) stopScan()
         
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -141,30 +99,34 @@ class BleScanService : Service() {
             .build()
 
         val filters = mutableListOf<ScanFilter>()
-        filters.add(ScanFilter.Builder().build())
+        
+        for (uuidStr in currentServiceUuids) {
+            try {
+                filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(uuidStr)).build())
+            } catch (e: Exception) {}
+        }
+
+        filters.add(ScanFilter.Builder().setManufacturerData(APPLE_MANUFACTURER_ID, byteArrayOf()).build())
+        filters.add(ScanFilter.Builder().setServiceUuid(EDDYSTONE_SERVICE_UUID).build())
+        filters.add(ScanFilter.Builder().setManufacturerData(TELTONIKA_MANUFACTURER_ID, byteArrayOf()).build())
 
         try {
             bluetoothLeScanner?.startScan(filters, settings, scanCallback)
             isScanning = true
-            Log.d(TAG, "BLE Scan started")
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting scan: ${e.message}")
+            Log.e(TAG, "StartScan Error: ${e.message}")
             isScanning = false
         }
     }
 
     private fun stopScan() {
-        Log.d(TAG, "Stopping BLE Scan...")
         try {
             bluetoothLeScanner?.stopScan(scanCallback)
-        } catch (e: Exception) {
-            Log.e(TAG, "Error stopping scan: ${e.message}")
-        }
+        } catch (e: Exception) { }
         isScanning = false
     }
 
     override fun onDestroy() {
-        handler.removeCallbacks(scanRestartRunnable)
         stopScan()
         super.onDestroy()
     }
