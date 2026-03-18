@@ -1,6 +1,6 @@
 name: bg_ble_scanner
 description: "A Flutter plugin for continuous BLE scanning in the background using an Android Foreground Service. Works even when the screen is locked."
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/henriwasd/bg_ble_scanner
 
 environment:

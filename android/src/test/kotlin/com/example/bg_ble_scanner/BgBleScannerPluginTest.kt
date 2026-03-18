@@ -1,27 +1,44 @@
 package com.example.bg_ble_scanner
 
+import android.content.Context
+import android.content.Intent
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
+import kotlin.test.BeforeTest
 import kotlin.test.Test
-
-/*
- * This demonstrates a simple unit test of the Kotlin portion of this plugin's implementation.
- *
- * Once you have built the plugin's example app, you can run these tests from the command
- * line by running `./gradlew testDebugUnitTest` in the `example/android/` directory, or
- * you can run them directly from IDEs that support JUnit such as Android Studio.
- */
+import java.lang.reflect.Field
 
 internal class BgBleScannerPluginTest {
+    private lateinit var plugin: BgBleScannerPlugin
+    private lateinit var mockContext: Context
+    private lateinit var mockResult: MethodChannel.Result
+
+    @BeforeTest
+    fun setup() {
+        plugin = BgBleScannerPlugin()
+        mockContext = Mockito.mock(Context::class.java)
+        mockResult = Mockito.mock(MethodChannel.Result::class.java)
+        
+        // Use reflection to set the private context field
+        val contextField: Field = BgBleScannerPlugin::class.java.getDeclaredField("context")
+        contextField.isAccessible = true
+        contextField.set(plugin, mockContext)
+    }
+
     @Test
-    fun onMethodCall_getPlatformVersion_returnsExpectedValue() {
-        val plugin = BgBleScannerPlugin()
-
-        val call = MethodCall("getPlatformVersion", null)
-        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
+    fun onMethodCall_startScan_returnsTrue() {
+        val call = MethodCall("startScan", null)
         plugin.onMethodCall(call, mockResult)
+        Mockito.verify(mockResult).success(true)
+    }
 
-        Mockito.verify(mockResult).success("Android " + android.os.Build.VERSION.RELEASE)
+    @Test
+    fun onMethodCall_stopScan_returnsTrue() {
+        val call = MethodCall("stopScan", null)
+        plugin.onMethodCall(call, mockResult)
+        Mockito.verify(mockResult).success(true)
+        Mockito.verify(mockContext).stopService(any(Intent::class.java))
     }
 }

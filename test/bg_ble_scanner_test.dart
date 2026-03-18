@@ -8,7 +8,17 @@ class MockBgBleScannerPlatform
     with MockPlatformInterfaceMixin
     implements BgBleScannerPlatform {
   @override
-  Future<String?> getPlatformVersion() => Future.value('42');
+  Future<bool> startScan() => Future.value(true);
+
+  @override
+  Future<bool> stopScan() => Future.value(true);
+
+  @override
+  Stream<Map<dynamic, dynamic>> get scanResults => Stream.value({
+        'name': 'Test Device',
+        'address': '00:11:22:33:44:55',
+        'rssi': -60,
+      });
 }
 
 void main() {
@@ -18,11 +28,30 @@ void main() {
     expect(initialPlatform, isInstanceOf<MethodChannelBgBleScanner>());
   });
 
-  test('getPlatformVersion', () async {
+  test('startScan', () async {
     BgBleScanner bgBleScannerPlugin = BgBleScanner();
     MockBgBleScannerPlatform fakePlatform = MockBgBleScannerPlatform();
     BgBleScannerPlatform.instance = fakePlatform;
 
-    expect(await bgBleScannerPlugin.getPlatformVersion(), '42');
+    expect(await bgBleScannerPlugin.startScan(), true);
+  });
+
+  test('stopScan', () async {
+    BgBleScanner bgBleScannerPlugin = BgBleScanner();
+    MockBgBleScannerPlatform fakePlatform = MockBgBleScannerPlatform();
+    BgBleScannerPlatform.instance = fakePlatform;
+
+    expect(await bgBleScannerPlugin.stopScan(), true);
+  });
+
+  test('scanResults', () async {
+    BgBleScanner bgBleScannerPlugin = BgBleScanner();
+    MockBgBleScannerPlatform fakePlatform = MockBgBleScannerPlatform();
+    BgBleScannerPlatform.instance = fakePlatform;
+
+    final result = await bgBleScannerPlugin.scanResults.first;
+    expect(result['name'], 'Test Device');
+    expect(result['address'], '00:11:22:33:44:55');
+    expect(result['rssi'], -60);
   });
 }

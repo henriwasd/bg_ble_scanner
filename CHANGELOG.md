@@ -1,3 +1,10 @@
+## 1.0.2
+
+*   Updated unit tests for `startScan`, `stopScan`, and `scanResults`.
+*   Added `BgBleScannerPlatform` interface tests.
+*   Fixed outdated Android unit tests.
+*   Updated example app integration and widget tests.
+
 ## 1.0.1
 
 *   Fix GitHub Actions publish workflow.

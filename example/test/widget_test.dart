@@ -11,17 +11,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bg_ble_scanner_example/main.dart';
 
 void main() {
-  testWidgets('Verify Platform version', (WidgetTester tester) async {
+  testWidgets('Verify UI components', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const MaterialApp(home: MyApp()));
 
-    // Verify that platform version is retrieved.
-    expect(
-      find.byWidgetPredicate(
-        (Widget widget) =>
-            widget is Text && widget.data!.startsWith('Running on:'),
-      ),
-      findsOneWidget,
-    );
+    // Verify that the title is present.
+    expect(find.text('BLE Background Scanner'), findsOneWidget);
+
+    // Verify that the buttons are present.
+    expect(find.text('Iniciar Scan'), findsOneWidget);
+    expect(find.text('Parar Scan'), findsOneWidget);
   });
 }

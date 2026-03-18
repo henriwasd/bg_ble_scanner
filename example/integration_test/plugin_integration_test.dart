@@ -14,11 +14,9 @@ import 'package:bg_ble_scanner/bg_ble_scanner.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('getPlatformVersion test', (WidgetTester tester) async {
+  testWidgets('startScan test', (WidgetTester tester) async {
     final BgBleScanner plugin = BgBleScanner();
-    final String? version = await plugin.getPlatformVersion();
-    // The version string depends on the host platform running the test, so
-    // just assert that some non-empty string is returned.
-    expect(version?.isNotEmpty, true);
+    final bool? success = await plugin.startScan();
+    expect(success, true);
   });
 }

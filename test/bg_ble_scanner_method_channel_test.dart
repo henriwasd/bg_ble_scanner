@@ -6,13 +6,20 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   MethodChannelBgBleScanner platform = MethodChannelBgBleScanner();
-  const MethodChannel channel = MethodChannel('bg_ble_scanner');
+  const MethodChannel channel = MethodChannel('bg_ble_scanner/methods');
 
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-          return '42';
-        });
+      switch (methodCall.method) {
+        case 'startScan':
+          return true;
+        case 'stopScan':
+          return true;
+        default:
+          return null;
+      }
+    });
   });
 
   tearDown(() {
@@ -20,7 +27,15 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
-  test('getPlatformVersion', () async {
-    expect(await platform.getPlatformVersion(), '42');
+  test('startScan', () async {
+    expect(await platform.startScan(), true);
+  });
+
+  test('stopScan', () async {
+    expect(await platform.stopScan(), true);
+  });
+
+  test('scanResults', () async {
+    expect(platform.scanResults, isA<Stream<Map<dynamic, dynamic>>>());
   });
 }
