@@ -12,7 +12,7 @@ class BgBleScanner {
   }
 
   /// Stream que emite os dispositivos Bluetooth encontrados.
-  /// Cada mapa contém: 'name', 'address' e 'rssi'.
+  /// Cada mapa contém: 'name', 'address', 'rssi', 'manufacturerData', 'serviceData' e 'rawData'.
   Stream<Map<dynamic, dynamic>> get scanResults {
     return BgBleScannerPlatform.instance.scanResults;
   }

@@ -18,11 +18,24 @@ class BgBleScannerPlugin : FlutterPlugin, MethodCallHandler, EventChannel.Stream
     private val scanReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == BleScanService.SCAN_RESULT_ACTION) {
-                val deviceData = mapOf(
+                val deviceData = mutableMapOf<String, Any?>(
                     "name" to intent.getStringExtra(BleScanService.DEVICE_NAME),
                     "address" to intent.getStringExtra(BleScanService.DEVICE_ADDRESS),
                     "rssi" to intent.getIntExtra(BleScanService.RSSI, 0)
                 )
+                
+                intent.getByteArrayExtra(BleScanService.MANUFACTURER_DATA)?.let {
+                    deviceData["manufacturerData"] = it
+                }
+                
+                intent.getByteArrayExtra(BleScanService.SERVICE_DATA)?.let {
+                    deviceData["serviceData"] = it
+                }
+                
+                intent.getByteArrayExtra(BleScanService.RAW_DATA)?.let {
+                    deviceData["rawData"] = it
+                }
+                
                 eventSink?.success(deviceData)
             }
         }

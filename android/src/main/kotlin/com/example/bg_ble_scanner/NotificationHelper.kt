@@ -21,7 +21,7 @@ class NotificationHelper(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Bluetooth Scan Service"
             val descriptionText = "Monitoring nearby BLE devices"
-            val importance = NotificationManager.IMPORTANCE_LOW
+            val importance = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
@@ -36,7 +36,7 @@ class NotificationHelper(private val context: Context) {
             .setContentTitle("Escaneando Bluetooth...")
             .setContentText("O serviço está rodando em segundo plano.")
             .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
             .build()
     }
