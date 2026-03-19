@@ -16,6 +16,8 @@ void main() {
           return true;
         case 'stopScan':
           return true;
+        case 'isBluetoothEnabled':
+          return true;
         default:
           return null;
       }
@@ -33,6 +35,10 @@ void main() {
 
   test('stopScan', () async {
     expect(await platform.stopScan(), true);
+  });
+
+  test('isBluetoothEnabled', () async {
+    expect(await platform.isBluetoothEnabled(), true);
   });
 
   test('scanResults', () async {

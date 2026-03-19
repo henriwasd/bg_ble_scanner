@@ -1,3 +1,8 @@
+## 1.1.0
+
+*   Added `isBluetoothEnabled()` to check if Bluetooth is enabled on the device.
+*   Updated unit tests to include `isBluetoothEnabled` verification.
+
 ## 1.0.2
 
 *   Updated unit tests for `startScan`, `stopScan`, and `scanResults`.

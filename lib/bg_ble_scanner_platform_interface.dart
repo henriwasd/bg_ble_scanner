@@ -31,6 +31,10 @@ abstract class BgBleScannerPlatform extends PlatformInterface {
     throw UnimplementedError('stopScan() has not been implemented.');
   }
 
+  Future<bool> isBluetoothEnabled() {
+    throw UnimplementedError('isBluetoothEnabled() has not been implemented.');
+  }
+
   Stream<Map<dynamic, dynamic>> get scanResults {
     throw UnimplementedError('scanResults has not been implemented.');
   }

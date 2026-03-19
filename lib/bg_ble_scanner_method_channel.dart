@@ -25,6 +25,12 @@ class MethodChannelBgBleScanner extends BgBleScannerPlatform {
   }
 
   @override
+  Future<bool> isBluetoothEnabled() async {
+    final isEnabled = await methodChannel.invokeMethod<bool>('isBluetoothEnabled');
+    return isEnabled ?? false;
+  }
+
+  @override
   Stream<Map<dynamic, dynamic>> get scanResults {
     return eventChannel.receiveBroadcastStream().cast<Map<dynamic, dynamic>>();
   }

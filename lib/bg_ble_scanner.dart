@@ -11,6 +11,11 @@ class BgBleScanner {
     return BgBleScannerPlatform.instance.stopScan();
   }
 
+  /// Verifica se o Bluetooth do aparelho está ligado.
+  Future<bool> isBluetoothEnabled() {
+    return BgBleScannerPlatform.instance.isBluetoothEnabled();
+  }
+
   /// Stream que emite os dispositivos Bluetooth encontrados.
   /// Cada mapa contém: 'name', 'address', 'rssi', 'manufacturerData', 'serviceData' e 'rawData'.
   Stream<Map<dynamic, dynamic>> get scanResults {
