@@ -1,4 +1,4 @@
-package com.example.bg_ble_scanner
+package br.com.henriwasd.bg_ble_scanner
 
 import android.content.Context
 import android.content.Intent

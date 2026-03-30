@@ -1,4 +1,4 @@
-﻿package com.example.bg_ble_scanner
+﻿package br.com.henriwasd.bg_ble_scanner
 
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
@@ -16,7 +16,7 @@ import java.util.*
 class BleScanService : Service() {
 
     companion object {
-        const val SCAN_RESULT_ACTION = "com.example.bg_ble_scanner.SCAN_RESULT"
+        const val SCAN_RESULT_ACTION = "br.com.henriwasd.bg_ble_scanner.SCAN_RESULT"
         const val DEVICE_NAME = "device_name"
         const val DEVICE_ADDRESS = "device_address"
         const val RSSI = "rssi"

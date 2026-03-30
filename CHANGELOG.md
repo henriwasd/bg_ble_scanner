@@ -1,3 +1,8 @@
+## 1.2.0
+
+*   Changed package identifier from `com.example` to `br.com.henriwasd` to reflect the new domain `henriwasd.com.br`.
+*   Moved Android sources to the new package structure.
+
 ## 1.1.0
 
 *   Added `isBluetoothEnabled()` to check if Bluetooth is enabled on the device.

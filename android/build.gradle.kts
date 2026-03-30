@@ -1,4 +1,4 @@
-group = "com.example.bg_ble_scanner"
+group = "br.com.henriwasd.bg_ble_scanner"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -27,7 +27,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.bg_ble_scanner"
+    namespace = "br.com.henriwasd.bg_ble_scanner"
 
     compileSdk = 36
 
