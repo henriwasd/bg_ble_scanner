@@ -12,6 +12,8 @@ class MethodChannelBgBleScanner extends BgBleScannerPlatform {
   /// The event channel used to receive scan results.
   final eventChannel = const EventChannel('bg_ble_scanner/events');
 
+  Stream<Map<dynamic, dynamic>>? _scanResultsStream;
+
   @override
   Future<bool> startScan() async {
     final success = await methodChannel.invokeMethod<bool>('startScan');
@@ -32,6 +34,7 @@ class MethodChannelBgBleScanner extends BgBleScannerPlatform {
 
   @override
   Stream<Map<dynamic, dynamic>> get scanResults {
-    return eventChannel.receiveBroadcastStream().cast<Map<dynamic, dynamic>>();
+    _scanResultsStream ??= eventChannel.receiveBroadcastStream().cast<Map<dynamic, dynamic>>();
+    return _scanResultsStream!;
   }
 }

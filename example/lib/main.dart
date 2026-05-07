@@ -26,8 +26,13 @@ class _MyAppState extends State<MyApp> {
 
   void _listenToScanResults() {
     _bgBleScanner.scanResults.listen((device) {
+      debugPrint(
+        "Dispositivo encontrado: ${device['name']} (${device['address']}) - RSSI: ${device['rssi']} dBm",
+      );
       setState(() {
-        final index = _devices.indexWhere((d) => d['address'] == device['address']);
+        final index = _devices.indexWhere(
+          (d) => d['address'] == device['address'],
+        );
         if (index != -1) {
           _devices[index] = device;
         } else {
@@ -38,12 +43,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _startScan() async {
-    // No Android 14, precisamos dessas permissões específicas
     final permissions = [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
       Permission.location,
-      Permission.notification, // OBRIGATÓRIO para Foreground Service
+      Permission.notification,
     ];
 
     Map<Permission, PermissionStatus> statuses = await permissions.request();
@@ -68,8 +72,7 @@ class _MyAppState extends State<MyApp> {
       }
     } else {
       _showError("Erro: Conceda todas as permissões (incluindo Notificações).");
-      
-      // Se a permissão foi negada permanentemente, abre as configurações
+
       if (statuses[Permission.notification]?.isPermanentlyDenied ?? false) {
         openAppSettings();
       }
@@ -78,9 +81,9 @@ class _MyAppState extends State<MyApp> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _stopScan() async {
@@ -102,7 +105,7 @@ class _MyAppState extends State<MyApp> {
                 padding: EdgeInsets.all(8.0),
                 child: CircularProgressIndicator(color: Colors.blue),
               ),
-            )
+            ),
         ],
       ),
       body: Column(
@@ -118,7 +121,9 @@ class _MyAppState extends State<MyApp> {
                 ),
                 ElevatedButton(
                   onPressed: _isScanning ? _stopScan : null,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red[100]),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[100],
+                  ),
                   child: const Text('Parar Scan'),
                 ),
               ],

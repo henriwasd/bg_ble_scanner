@@ -1,4 +1,4 @@
-﻿package br.com.henriwasd.bg_ble_scanner
+package br.com.henriwasd.bg_ble_scanner
 
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
@@ -70,13 +70,22 @@ class BleScanService : Service() {
     override fun onCreate() {
         super.onCreate()
         notificationHelper = NotificationHelper(this)
-        startForeground(
-            NotificationHelper.NOTIFICATION_ID,
-            notificationHelper.getNotification(),
+        try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            } else 0
-        )
+                startForeground(
+                    NotificationHelper.NOTIFICATION_ID,
+                    notificationHelper.getNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION or ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                )
+            } else {
+                startForeground(
+                    NotificationHelper.NOTIFICATION_ID,
+                    notificationHelper.getNotification()
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service: ${e.message}")
+        }
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothLeScanner = bluetoothManager.adapter?.bluetoothLeScanner
     }
@@ -120,9 +129,11 @@ class BleScanService : Service() {
     }
 
     private fun stopScan() {
-        try {
-            bluetoothLeScanner?.stopScan(scanCallback)
-        } catch (e: Exception) { }
+        if (isScanning) {
+            try {
+                bluetoothLeScanner?.stopScan(scanCallback)
+            } catch (e: Exception) { }
+        }
         isScanning = false
     }
 
