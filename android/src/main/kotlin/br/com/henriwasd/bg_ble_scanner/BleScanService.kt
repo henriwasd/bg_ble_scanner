@@ -24,7 +24,7 @@ class BleScanService : Service() {
         const val SERVICE_DATA = "service_data"
         const val RAW_DATA = "raw_data"
         private const val TAG = "BleScanService"
-        
+
         private const val APPLE_MANUFACTURER_ID = 0x004C
         private const val TELTONIKA_MANUFACTURER_ID = 0x089A
         private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000feaa-0000-1000-8000-00805f9b34fb")
@@ -41,7 +41,8 @@ class BleScanService : Service() {
             val deviceData = mutableMapOf<String, Any?>(
                 "name" to (device.name ?: "Unknown"),
                 "address" to device.address,
-                "rssi" to result.rssi
+                "rssi" to result.rssi,
+                "txPower" to result.txPower
             )
 
             result.scanRecord?.bytes?.let { deviceData["rawData"] = it }
@@ -101,14 +102,14 @@ class BleScanService : Service() {
 
     private fun startScan() {
         if (isScanning) stopScan()
-        
+
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
             .build()
 
         val filters = mutableListOf<ScanFilter>()
-        
+
         for (uuidStr in currentServiceUuids) {
             try {
                 filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(uuidStr)).build())

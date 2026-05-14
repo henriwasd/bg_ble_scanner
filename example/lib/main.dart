@@ -26,9 +26,6 @@ class _MyAppState extends State<MyApp> {
 
   void _listenToScanResults() {
     _bgBleScanner.scanResults.listen((device) {
-      debugPrint(
-        "Dispositivo encontrado: ${device['name']} (${device['address']}) - RSSI: ${device['rssi']} dBm",
-      );
       setState(() {
         final index = _devices.indexWhere(
           (d) => d['address'] == device['address'],
@@ -55,7 +52,6 @@ class _MyAppState extends State<MyApp> {
     bool allGranted = true;
     statuses.forEach((permission, status) {
       if (!status.isGranted) {
-        debugPrint("Permissão negada: $permission -> $status");
         allGranted = false;
       }
     });
